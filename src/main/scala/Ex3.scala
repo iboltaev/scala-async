@@ -62,7 +62,7 @@ object Ex3 {
     override def point[A](a: => A): AsyncStream[A] = unit(a)
 
     override def bind[A, B](
-      ma: AsyncStream[A])(f: A => AsyncStream[B]): AsyncStream[B] = //new AsyncNil
+      ma: AsyncStream[A])(f: A => AsyncStream[B]): AsyncStream[B] =
       new AsyncStream[B](ma.data flatMap (pair => {
         if (pair eq null) Future(null)
         else f(pair.first).data map (
