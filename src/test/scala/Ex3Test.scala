@@ -6,7 +6,7 @@ import com.twitter.util._
 import com.twitter.conversions.time._
 
 import scalaz._
-import syntax.monad._
+import syntax.monadPlus._
 
 import Ex3._
 
@@ -55,8 +55,8 @@ class Ex3Spec extends FlatSpec with Matchers {
   }
 
   it should "fold large stream without stackoverflow" in {
-    val stream = makeInfStream takeWhile (_ < 100000)
-    stream.flatten() should be (0 to 99999)
+    val stream = makeInfStream takeWhile (_ < 1000000)
+    stream.flatten() should be (0 to 999999)
   }
 
 }

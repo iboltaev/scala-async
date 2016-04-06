@@ -1,7 +1,6 @@
 import com.twitter.util._
 
 import scalaz._
-import syntax.monad._
 
 object Ex3 {
 
@@ -58,11 +57,15 @@ object Ex3 {
     }))
 
 
-  class AsyncStreamMonad extends Monad[AsyncStream] {
+  class AsyncStreamMonad extends MonadPlus[AsyncStream] {
+    override def empty[A] = nil[A]
+
     override def point[A](a: => A): AsyncStream[A] = unit(a)
 
+    override def plus[A](a: AsyncStream[A], b: => AsyncStream[A]) = concat(a, b)
+
     override def bind[A, B](
-      ma: AsyncStream[A])(f: A => AsyncStream[B]): AsyncStream[B] =
+      ma: AsyncStream[A])(f: A => AsyncStream[B]): AsyncStream[B] = //new AsyncNil
       new AsyncStream[B](ma.data flatMap (pair => {
         if (pair eq null) Future(null)
         else f(pair.first).data map (

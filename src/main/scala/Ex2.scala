@@ -16,6 +16,7 @@ object Ex2 {
       FState((s: S) => m(s) flatMap { pair => f(pair._1)(pair._2) })
 
     def conds(f: S => Boolean): F[Boolean] = bind(gets[S])(vs => point(f(vs)))
+    def fconds(f: S => F[Boolean]): F[Boolean] = bind(gets[S])(f)
     def mods(f: S => S): F[S] = bind(gets[S])(vs => puts(f(vs)))
 
     def forM_[A](cond: S => Boolean, mod: S => S)(action: => F[A]): F[Unit] =
@@ -28,6 +29,11 @@ object Ex2 {
   def conds[S : FStateMonad](f: S => Boolean) = {
     val m = implicitly[FStateMonad[S]]
     m.conds(f)
+  }
+
+  def fconds[S : FStateMonad](f: S => FState[S, Boolean]) = {
+    val m = implicitly[FStateMonad[S]]
+    m.fconds(f)
   }
 
   def mods[S : FStateMonad](f: S => S) = {
