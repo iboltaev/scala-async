@@ -9,11 +9,15 @@ object Ex2 {
     def apply(s: S) = f(s)
   }
 
-  class FStateMonad[S] extends Monad[({ type f[X] = FState[S, X]})#f] {
+  class FStateMonad[S] extends MonadPlus[({ type f[X] = FState[S, X]})#f] {
     type F[X] = FState[S, X]
+    override def empty[A]: F[A] = FState((s: S) => new NoFuture)
     override def point[A](a: => A): F[A] = FState((s: S) => Future((a, s)))
+
     override def bind[A, B](m: F[A])(f: A => F[B]): F[B] =
       FState((s: S) => m(s) flatMap { pair => f(pair._1)(pair._2) })
+
+    override def plus[A](a: F[A],b: => F[A]): F[A] = bind(a)(_ => b)
 
     def conds(f: S => Boolean): F[Boolean] = bind(gets[S])(vs => point(f(vs)))
     def fconds(f: S => F[Boolean]): F[Boolean] = bind(gets[S])(f)

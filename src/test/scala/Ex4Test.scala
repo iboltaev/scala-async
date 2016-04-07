@@ -6,7 +6,7 @@ import com.twitter.util._
 import com.twitter.conversions.time._
 
 import scalaz._
-import syntax.monad._
+import syntax.monadPlus._
 
 import Ex4._
 
@@ -39,8 +39,8 @@ class Ex4Spec extends FlatSpec with Matchers {
     val fstate = for(
       _ <- m2.whileM_(notEmpty(_.stream), for(
         s <- gets[S];
-        pair <- get[Int, S](s.stream);
-        _ <- puts(S(s.counter + pair._1, pair._2))
+        (el, newStream) <- get[Int, S](s.stream);
+        _ <- puts(S(s.counter + el, newStream))
       ) yield());
       v <- gets[S]
     ) yield(v.counter)
