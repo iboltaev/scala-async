@@ -31,5 +31,8 @@ object Ex4 {
   def get[A, S](stream: Ex3.AsyncStream[A]): Ex2.FState[S, (A, Ex3.AsyncStream[A])] =
     Ex2.FState(s => stream.data map (pair => ((pair.first, pair.second), s) ))
 
+  def genAsyncStream[S,A](start: S)(gen: Ex2.FState[S, A]) =
+    Ex3.genAsyncStream(start)(gen.f)
+
   implicit val asMonad = new Ex3.AsyncStreamMonad
 }

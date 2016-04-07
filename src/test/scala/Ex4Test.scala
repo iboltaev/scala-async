@@ -51,12 +51,12 @@ class Ex4Spec extends FlatSpec with Matchers {
   it should "use FState as generator" in {
     implicit val m = new FStateMonad[Int]
 
-    val fstate = for(
-      s <- gets[Int];
-      _ <- puts(s + 1)
-    ) yield(s)
-
-    val stream = genAsyncStream(0)(fstate.f) take 3
+    val stream = Ex4.genAsyncStream(0) {
+      for(
+        s <- gets[Int];
+        _ <- puts(s + 1)
+      ) yield(s)
+    } take 3
 
     stream.flatten() should be (0 :: 1 :: 2 :: Nil)
   }
@@ -64,13 +64,13 @@ class Ex4Spec extends FlatSpec with Matchers {
   it should "use FState to generate finite stream" in {
     implicit val m = new FStateMonad[Int]
 
-    val fstate = for(
-      s <- gets[Int];
-      if (s < 3); // yes, we generate finite stream
-      _ <- puts(s + 1)
-    ) yield(s)
-
-    val stream = genAsyncStream(0)(fstate.f)
+    val stream = Ex4.genAsyncStream(0) {
+      for(
+        s <- gets[Int];
+        if (s < 3); // yes, we generate finite stream
+        _ <- puts(s + 1)
+      ) yield(s)
+    }
 
     stream.flatten() should be (0 :: 1 :: 2 :: Nil)
   }
