@@ -34,15 +34,23 @@ object Ex3 {
         else if (!p(pair.first)) null
         else Pair(pair.first, pair.second.takeWhile(p))
       }))
+
+    def take(n: Int): AsyncStream[A] =
+      if (n <= 0) nil
+      else new AsyncStream[A](data map (pair => {
+        if (pair eq null) null
+        else Pair(pair.first, pair.second.take(n - 1))
+      }))
   }
 
-  // 'gen' must return 'NoFuture' in case of stream end
+  // 'gen' must return 'NoFuture' or 'Future(null)' in case of stream end
   def genAsyncStream[S,A](start: S)(gen: S => Future[(A, S)]): AsyncStream[A] =
     new AsyncStream[A](
       gen(start) match {
         case _: NoFuture => Future(null)
         case future => future map (pair => { // Future[Pair[A, AsyncStream]]
-          Pair(pair._1, genAsyncStream(pair._2)(gen))
+          if (pair eq null) null
+          else Pair(pair._1, genAsyncStream(pair._2)(gen))
         })})
 
   def nil[A] = new AsyncStream[A](Future(null))
