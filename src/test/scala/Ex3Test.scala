@@ -36,9 +36,10 @@ class Ex3Spec extends FlatSpec with Matchers {
     val s1 = makeStream(0 :: 1 :: Nil)
     val s2 = makeStream(2 :: 3 :: Nil)
 
-    val s3 = for(
-      v <- s1;
-      v2 <- s2) yield((v, v2))
+    val s3 = for {
+      v <- s1
+      v2 <- s2
+    } yield((v, v2))
 
     s3.flatten() should be (List((0, 2), (0, 3), (1, 2), (1, 3)))
   }
@@ -58,5 +59,4 @@ class Ex3Spec extends FlatSpec with Matchers {
     val stream = makeInfStream takeWhile (_ < 1000000)
     stream.flatten() should be (0 to 999999)
   }
-
 }

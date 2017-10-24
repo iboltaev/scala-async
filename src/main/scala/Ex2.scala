@@ -31,6 +31,9 @@ object Ex2 {
 
     def forM_[A](cond: S => Boolean, mod: S => S)(action: => F[A]): F[Unit] =
       whileM_(conds(cond), bind(action)(va => mods(mod)))
+
+    def whileM_[A](cond: S => Boolean)(body: => F[A]): F[Unit] =
+      whileM_(conds(cond), body)
   }
 
   def gets[S](): FState[S, S] = FState((s: S) => Future((s, s)))

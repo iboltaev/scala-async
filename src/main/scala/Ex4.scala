@@ -4,13 +4,22 @@ import scalaz._
 import syntax.monad._
 
 object Ex4 {
+  implicit val asMonad = new Ex3.AsyncStreamMonad
 
-  def foreach[A, S]
-    (stream: Ex3.AsyncStream[A])(f: A => Ex2.FState[S, Any]): Ex2.FState[S, Unit] = 
-    Ex2.FState(s => {
-      stream.foldLeft(Future(s))(
-      (futureS, a) => futureS.flatMap(s2 => f(a)(s2).map(_._2))).flatten.map( ((), _) )
-    })
+  // this was rewrited from 'foldLeft' usage because of future
+  // switching to CancellableFutures, not supporting 'flatten'
+  def foreach[A, S](stream: Ex3.AsyncStream[A])(f: A => Ex2.FState[S, Any]): Ex2.FState[S, Any] = {
+    implicit val fsMonad = new Ex2.FStateMonad[S]
+    def impl(d: Ex3.AsyncStream[A], acc: Future[S]): Future[S] = {
+      // Future[S]
+      d.data.flatMap { pair =>
+        if (pair eq null) acc
+        else impl(pair.second, acc.flatMap(s2 => f(pair.first)(s2).map(_._2)))
+      }
+    }
+
+    Ex2.FState(s => impl(stream, Future(s)).map{s2 => (null, s2)})
+  }
 
   def isEmpty[A, S](stream: Ex3.AsyncStream[A]): Ex2.FState[S, Boolean] =
     Ex2.FState(s => stream.data map (pair => (pair eq null, s)))
@@ -33,6 +42,4 @@ object Ex4 {
 
   def genAsyncStream[S,A](start: S)(gen: Ex2.FState[S, A]) =
     Ex3.genAsyncStream(start)(gen.f)
-
-  implicit val asMonad = new Ex3.AsyncStreamMonad
 }
