@@ -17,8 +17,7 @@ object Ex3 {
   case class AsyncStream[A](data: Future[Pair[A, AsyncStream[A]]]) {
     def foldLeft[B](start: B)(f: (B, A) => B): Future[B] = {
       def impl(d: Future[Pair[A, AsyncStream[A]]], acc: Future[B]): Future[B] =
-        d flatMap (pair => {
-          if (pair eq null) acc
+        d flatMap (pair => {          if (pair eq null) acc
           else impl(pair.second.data, acc map (b => f(b, pair.first)))
         })
 
@@ -58,7 +57,7 @@ object Ex3 {
   def unit[A](a: => A) = new AsyncStream[A](
     Future(Pair(a, nil)))
 
-  def concat[A](s1: AsyncStream[A], s2: => AsyncStream[A]): AsyncStream[A] =
+  def concat[A](s1: AsyncStream[A], s2: AsyncStream[A]): AsyncStream[A] =
     new AsyncStream[A](s1.data flatMap (pair => {
       if (pair eq null) s2.data
       else Future(Pair(pair.first, concat(pair.second, s2)))
