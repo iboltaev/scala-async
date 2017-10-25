@@ -19,15 +19,33 @@ class Ex4Spec extends FlatSpec with Matchers {
 
   it should "work with 'foreach'" in {
     implicit val m = new FStateMonad[Int]
-    
+    import m._
+
     val fstate = for {
       _ <- foreach(makeStream(0 :: 1 :: 2 :: Nil)) { v =>
-        m.mods(_ + 1)
+        mods(_ + 1)
       }
       v2 <- gets[Int]
     } yield (v2)
 
     fstate(0)() should be ((3, 3))
+  }
+
+  it should "work with 'foreach' 2" in {
+    implicit val m = new FStateMonad[Int]
+    import m._
+
+    val fstate = for {
+      _ <- foreach(makeStream(0 :: 1 :: 2 :: 3 :: Nil)) { v =>
+        for {
+          s <- gets[Int]
+          _ <- puts(s + v)
+        } yield () 
+      }
+      v2 <- gets[Int]
+    } yield v2
+
+    fstate(0)() should be ((6, 6))
   }
 
   it should "work with 'isEmpty' and 'get'" in {

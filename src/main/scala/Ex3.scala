@@ -4,7 +4,7 @@ import scalaz._
 
 object Ex3 {
 
-  class Pair[A, B](firstp: => A, secondp: => B) {
+  class Pair[A, B](firstp: A, secondp: => B) {
     val first = firstp
     lazy val second = secondp
   }

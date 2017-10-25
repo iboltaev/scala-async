@@ -9,16 +9,24 @@ object Ex4 {
   // this was rewrited from 'foldLeft' usage because of future
   // switching to CancellableFutures, not supporting 'flatten'
   def foreach[A, S](stream: Ex3.AsyncStream[A])(f: A => Ex2.FState[S, Any]): Ex2.FState[S, Any] = {
-    implicit val fsMonad = new Ex2.FStateMonad[S]
     def impl(d: Ex3.AsyncStream[A], acc: Future[S]): Future[S] = {
-      // Future[S]
-      d.data.flatMap { pair =>
-        if (pair eq null) acc
-        else impl(pair.second, acc.flatMap(s2 => f(pair.first)(s2).map(_._2)))
+      if (acc.isDefined && (acc.get() eq null)) acc
+      else {
+        implicit val m = new Ex2.FStateMonad[S]
+        // Future[S]
+        d.data.flatMap { pair =>
+          if (pair eq null) acc
+          else impl(
+            pair.second,
+            acc.flatMap { s2 =>
+              if (s2 eq null) Future(s2)
+              else f(pair.first)(s2).map(_._2)
+            })
+        }
       }
     }
 
-    Ex2.FState(s => impl(stream, Future(s)).map{s2 => (null, s2)})
+    Ex2.FState(s => impl(stream, Future(s)).map { s2 => (null, s2)})
   }
 
   def isEmpty[A, S](stream: Ex3.AsyncStream[A]): Ex2.FState[S, Boolean] =
