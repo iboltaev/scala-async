@@ -57,7 +57,7 @@ object Ex3 {
   def unit[A](a: => A) = new AsyncStream[A](
     Future(Pair(a, nil)))
 
-  def concat[A](s1: AsyncStream[A], s2: AsyncStream[A]): AsyncStream[A] =
+  def concat[A](s1: AsyncStream[A], s2: => AsyncStream[A]): AsyncStream[A] =
     new AsyncStream[A](s1.data flatMap (pair => {
       if (pair eq null) s2.data
       else Future(Pair(pair.first, concat(pair.second, s2)))
