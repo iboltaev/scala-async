@@ -1,20 +1,18 @@
-import scala.language.implicitConversions
-
+import Ex1._
 import org.scalatest._
 
-import com.twitter.util._
-import com.twitter.conversions.time._
-
-import Ex1._
+import scala.concurrent._
+import scala.concurrent.duration.Duration
+import scala.language.implicitConversions
 
 class Ex1Spec extends FlatSpec with Matchers {
   it should "work with 'flatMap' and 'map'" in {
-    val t = for(
+    val t = for {
       a <- FState.unit[Int, Int](10);
       b = a + 1
-    ) yield(b)
+    } yield b
 
-    t(0)() should be((11, 0))
+    Await.result(t(0), Duration.Inf) should be((11, 0))
   }
 
 }

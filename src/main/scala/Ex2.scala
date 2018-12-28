@@ -1,7 +1,7 @@
-import com.twitter.util._
-
 import scalaz._
-import syntax.monad._
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent._
 
 object Ex2 {
 
@@ -12,16 +12,15 @@ object Ex2 {
   class FStateMonad[S] extends MonadPlus[({ type f[X] = FState[S, X]})#f] {
     type F[X] = FState[S, X]
 
-    // we MUST NOT return 'NoFuture' here at all !!
     override def empty[A]: F[A] = FState((s: S) => Future(null))
 
     override def point[A](a: => A): F[A] = FState((s: S) => Future((a, s)))
 
     override def bind[A, B](m: F[A])(f: A => F[B]): F[B] =
-      FState((s: S) => m(s) flatMap { pair => {
+      FState((s: S) => m(s).flatMap { pair =>
         if (pair eq null) Future(null)
         else f(pair._1)(pair._2) 
-      }})
+      })
 
     override def plus[A](a: F[A],b: => F[A]): F[A] = bind(a)(_ => b)
 
@@ -30,7 +29,7 @@ object Ex2 {
     def mods(f: S => S): F[S] = bind(gets[S])(vs => puts(f(vs)))
 
     def forM_[A](cond: S => Boolean, mod: S => S)(action: => F[A]): F[Unit] =
-      whileM_(conds(cond), bind(action)(va => mods(mod)))
+      whileM_(conds(cond), bind(action)(_ => mods(mod)))
 
     def whileM_[A](cond: S => Boolean)(body: => F[A]): F[Unit] =
       whileM_(conds(cond), body)
