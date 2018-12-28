@@ -1,4 +1,3 @@
-import java.util.concurrent.atomic.AtomicReference
 import java.util.{Timer, TimerTask}
 
 import org.scalatest._
@@ -27,10 +26,10 @@ class CFutureTest extends FlatSpec with Matchers {
     }
   }
 
-  def timedCf(i: Int)(implicit ctx: AtomicReference[Option[() => Unit]]): CFuture[Int] =
+  def timedCf(i: Int)(implicit ctx: CFuture.Ctx): CFuture[Int] =
     CFuture.fromFuture(timed(i), () => println(s"cancelled $i"))
 
-  def stream(implicit ctx: AtomicReference[Option[() => Unit]]) = {
+  def stream(implicit ctx: CFuture.Ctx) = {
     /*def impl(cf: CFuture[Int]): CFuture[Int] = cf.flatMap { i =>
       impl(timedCf(i + 1))
     }*/
@@ -43,8 +42,10 @@ class CFutureTest extends FlatSpec with Matchers {
   }
 
   it should "work" in {
-    implicit val ctx = new AtomicReference[Option[() => Unit]](Some(() => {}))
-    val f = stream
+    val f = CFuture.withCtx { implicit ctx =>
+      stream
+    }
+
     val f2 = schedule(7000) {
       f.cancel()
     }
