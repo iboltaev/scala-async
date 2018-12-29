@@ -26,13 +26,15 @@ class CFutureTest extends FlatSpec with Matchers {
     }
   }
 
-  def timedCf(i: Int)(implicit ctx: CFuture.Ctx): CFuture[Int] =
+  def timedCf(i: Int): CFuture[Int] =
     CFuture.fromFuture(timed(i), () => println(s"cancelled $i"))
 
-  def stream(implicit ctx: CFuture.Ctx) = {
+  def stream = {
     /*def impl(cf: CFuture[Int]): CFuture[Int] = cf.flatMap { i =>
       impl(timedCf(i + 1))
     }*/
+    implicit val ctx = new CFuture.Ctx(None)
+
     def impl(cf: CFuture[Int]): CFuture[Int] = for {
       i <- cf
       next <- impl(timedCf(i + 1))
@@ -42,9 +44,7 @@ class CFutureTest extends FlatSpec with Matchers {
   }
 
   it should "work" in {
-    val f = CFuture.withCtx { implicit ctx =>
-      stream
-    }
+    val f = stream
 
     val f2 = schedule(7000) {
       f.cancel()
