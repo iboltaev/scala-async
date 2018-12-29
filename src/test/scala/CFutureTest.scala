@@ -33,7 +33,7 @@ class CFutureTest extends FlatSpec with Matchers {
     /*def impl(cf: CFuture[Int]): CFuture[Int] = cf.flatMap { i =>
       impl(timedCf(i + 1))
     }*/
-    implicit val ctx = new CFuture.Ctx(None)
+    implicit val ctx = new CFuture.Ctx(Some(Regular(() => {})))
 
     def impl(cf: CFuture[Int]): CFuture[Int] = for {
       i <- cf
