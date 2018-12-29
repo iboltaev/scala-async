@@ -79,14 +79,7 @@ class CFutureOps[A](val cf: CFuture[A])(implicit val ref: Ctx) {
     new CFuture[B](Future(fn(a)), cf.c)
   }
 
-  def cancel(): Unit = {
-    val c = ref.get()
-    if (c.isDefined) {
-      if (ref.compareAndSet(c, None)) {
-        c.foreach(_())
-      } else cancel()
-    }
-  }
+  def cancel(): Unit = fromOps(this).cancel()
 }
 
 object CFuture {
@@ -95,6 +88,8 @@ object CFuture {
   def fromFuture[A](f: Future[A], cancel: () => Unit) = {
     CFuture[A](f, Regular(cancel))
   }
+
+  def defaultCtx = new Ctx(Some(Regular(() => {})))
 
   def withCtx[A](f: AtomicReference[Option[Cancel]] => CFuture[A]): CFuture[A] = {
     val ctx = new AtomicReference[Option[Cancel]](Some(Regular(() => {})))
